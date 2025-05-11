@@ -1,0 +1,1 @@
+Tetris clone created as a final project for my university Rust course
