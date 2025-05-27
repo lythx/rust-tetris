@@ -5,6 +5,7 @@ use crossterm::{
     cursor::{Hide, MoveTo, Show},
     terminal::{Clear, ClearType, size as terminal_size, enable_raw_mode, disable_raw_mode},
 };
+use crate::LockedSquareMatrix;
 use crate::shape::Shape;
 
 const BOARD_WIDTH_IN_TILES: u16 = 10;
@@ -58,6 +59,30 @@ pub fn render_borders() -> Result<()> {
 pub fn render_shape(shape: &Shape) -> Result<()> {
     set_color(shape.color)?;
     render_shape_no_color(shape)?;
+    Ok(())
+}
+
+pub fn render_locked_squares(locked_squares: &LockedSquareMatrix) -> Result<()> {
+    for x in 0..locked_squares.len() {
+        for y in 0..locked_squares[x].len() {
+            if locked_squares[x][y].is_some() {
+                set_color(locked_squares[x][y].unwrap())?;
+                render_square(x as u16, y as u16)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn clear_locked_squares(locked_squares: &LockedSquareMatrix) -> Result<()> {
+    set_color(Color::Black)?;
+    for x in 0..locked_squares.len() {
+        for y in 0..locked_squares[x].len() {
+            if locked_squares[x][y].is_some() {
+                render_square(x as u16, y as u16)?;
+            }
+        }
+    }
     Ok(())
 }
 

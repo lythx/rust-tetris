@@ -1,46 +1,43 @@
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
-    terminal::{disable_raw_mode, enable_raw_mode},
 };
 use std::{
     io,
-    sync::mpsc::{self, Receiver, Sender},
-    thread,
     time::Duration,
 };
 
 /// Represents the different game actions triggered by key presses.
 #[derive(Debug, Clone, Copy)]
-pub enum GameAction {
+pub enum Action {
     MoveLeft,
     MoveRight,
     Rotate,
-    SoftDrop, // Move down faster
-    HardDrop, // Instantly drop
+    SoftDrop,
+    HardDrop,
     Quit,
-    None, // No specific action, used for heartbeat or unhandled keys
+    None,
 }
 
-pub fn receive_input() -> io::Result<GameAction> {
+pub fn receive_input() -> io::Result<Action> {
     if event::poll(Duration::from_millis(50))? {
         match event::read()? {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 let action = match key_event.code {
-                    KeyCode::Left => GameAction::MoveLeft,
-                    KeyCode::Right => GameAction::MoveRight,
-                    KeyCode::Up | KeyCode::Char('w') => GameAction::Rotate, // 'w' for WASD support
-                    KeyCode::Down | KeyCode::Char('s') => GameAction::SoftDrop, // 's' for WASD support
-                    KeyCode::Char(' ') => GameAction::HardDrop, // Spacebar for hard drop
-                    KeyCode::Char('q') | KeyCode::Esc => GameAction::Quit, // 'q' or Esc to quit
-                    _ => GameAction::None, // Unhandled key
+                    KeyCode::Left | KeyCode::Char('a')  => Action::MoveLeft,
+                    KeyCode::Right | KeyCode::Char('d') => Action::MoveRight,
+                    KeyCode::Up | KeyCode::Char('w') => Action::Rotate,
+                    KeyCode::Down | KeyCode::Char('s') => Action::SoftDrop,
+                    KeyCode::Char(' ') => Action::HardDrop,
+                    KeyCode::Char('q') | KeyCode::Esc => Action::Quit,
+                    _ => Action::None,
                 };
                 Ok(action)
             }
             _ => {
-                Ok(GameAction::None)
+                Ok(Action::None)
             }
         }
     } else {
-        Ok(GameAction::None)
+        Ok(Action::None)
     }
 }

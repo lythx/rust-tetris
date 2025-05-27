@@ -249,26 +249,23 @@ impl Shape {
         &self.matrices[self.current_matrix as usize]
     }
     
-    pub fn check_collision(&self, other: &Shape) -> bool {
-        let self_mat = self.get_matrix();
-        let other_mat = other.get_matrix();
-        for dx1 in 0..4 {
-            for dy1 in 0..4 {
-                if self_mat[dx1][dy1] != 1 {
-                    continue;
-                }
-                for dx2 in 0..4 {
-                    for dy2 in 0..4 {
-                        if other_mat[dx2][dy2] == 1 &&
-                            self.x + dx1 as i16 == other.x + dx2 as i16 &&
-                            self.y + dy1 as i16 == other.y + dy2 as i16 {
-                            return true;
-                        }
-                    }
-                }
-            }
+    pub fn is_occupying(&self, x: i16, y: i16) -> bool {
+        if x - self.x >= 4 || y - self.y >= 4 || x - self.x < 0 || y - self.y < 0 {
+            return false;
         }
-        false
+        self.get_matrix()[(x - self.x) as usize][(y - self.y) as usize] == 1
+    }
+    
+    pub fn get_occupied_squares(&self) -> Vec<(i16, i16)> {
+        let mut result = Vec::new();
+        for x in 0..4 {
+            for y in 0..4 {
+                if self.get_matrix()[x][y] == 1 {
+                    result.push((x as i16 + self.x, y as i16 + self.y));   
+                }
+            }       
+        }
+        result
     }
 
 }

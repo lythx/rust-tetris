@@ -6,9 +6,13 @@ mod update;
 use std::io::{Result};
 use std::time::{Duration, SystemTime};
 use crossterm::style::Color;
-use crate::input::{receive_input, GameAction};
-use crate::shape::{Shape, ShapeType};
+use crate::input::{receive_input, Action};
 use crate::update::{create_shape_and_check_collision, fall_instantly, try_fall, try_move_left, try_move_right, try_rotate};
+
+pub const BOARD_WIDTH_IN_TILES: usize = 10;
+pub const BOARD_HEIGHT_IN_TILES: usize = 20;
+
+pub type LockedSquareMatrix = [[Option<Color>; BOARD_HEIGHT_IN_TILES]; BOARD_WIDTH_IN_TILES];
 
 fn main() -> Result<()> {
     render::start()?;
@@ -22,8 +26,8 @@ fn main() -> Result<()> {
     // println!("{}", s1.check_collision(&s2));
 
 
-    let mut locked_shapes: Vec<Shape> = Vec::new();
-    let mut falling_shape = create_shape_and_check_collision(&locked_shapes).0;
+    let mut locked_squares: LockedSquareMatrix = [[None; BOARD_HEIGHT_IN_TILES]; BOARD_WIDTH_IN_TILES];
+    let mut falling_shape = create_shape_and_check_collision(&locked_squares).0;
     let mut next_fall = SystemTime::now() + Duration::from_millis(1000);
 
     loop {
@@ -31,43 +35,51 @@ fn main() -> Result<()> {
         let prev_falling_shape = falling_shape.clone();
         let finished_falling = if next_fall < SystemTime::now() {
             next_fall += Duration::from_millis(1000);
-            !try_fall(&mut falling_shape, &locked_shapes)
+            !try_fall(&mut falling_shape, &locked_squares)
         }
         else {
             match receive_input()? {
-                GameAction::MoveLeft => {
-                    try_move_left(&mut falling_shape, &locked_shapes);
+                Action::MoveLeft => {
+                    try_move_left(&mut falling_shape, &locked_squares);
                     false
                 },
-                GameAction::MoveRight => { 
-                    try_move_right(&mut falling_shape, &locked_shapes);
+                Action::MoveRight => {
+                    try_move_right(&mut falling_shape, &locked_squares);
                     false
                 },
-                GameAction::Rotate => { 
-                    try_rotate(&mut falling_shape, &locked_shapes);
+                Action::Rotate => {
+                    try_rotate(&mut falling_shape, &locked_squares);
                     false
                 },
-                GameAction::SoftDrop => { 
-                    try_fall(&mut falling_shape, &locked_shapes);
+                Action::SoftDrop => {
+                    try_fall(&mut falling_shape, &locked_squares);
                     false
                 },
-                GameAction::HardDrop => { 
-                    fall_instantly(&mut falling_shape, &locked_shapes);
+                Action::HardDrop => {
+                    fall_instantly(&mut falling_shape, &locked_squares);
                     true
                 },
-                GameAction::Quit => break,
-                GameAction::None => false 
+                Action::Quit => break,
+                Action::None => false
             }
         };
 
         if finished_falling {
-            locked_shapes.push(falling_shape.clone());
+            for (x, y) in falling_shape.get_occupied_squares() {
+                locked_squares[x as usize][y as usize] = Some(falling_shape.color);
+            }
             let (new_falling_shape, is_colliding) =
-                create_shape_and_check_collision(&locked_shapes);
+                create_shape_and_check_collision(&locked_squares);
             if is_colliding {
                 break;
             }
             falling_shape = new_falling_shape;
+            let old_locked_squares = locked_squares.clone();
+            if update::delete_full_rows(&mut locked_squares) != 0 {
+         
+            }
+            render::clear_locked_squares(&old_locked_squares)?; // todo this only on 0
+            render::render_locked_squares(&locked_squares)?; // todo this only on 0
         }
 
         if prev_falling_shape != falling_shape {
@@ -75,9 +87,6 @@ fn main() -> Result<()> {
         }
 
         render::render_shape(&falling_shape)?;
-        for locked_shape in &locked_shapes {
-            render::render_shape(locked_shape)?;
-        }
 
         std::thread::sleep(Duration::from_millis(50));
     }
