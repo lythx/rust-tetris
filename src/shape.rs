@@ -1,9 +1,11 @@
 use crossterm::style::Color;
+use rand::prelude::*;
 
 pub type ShapeMatrix = [[u8; 4]; 4];
 
 #[derive(Clone, Debug)]
 #[derive(Copy)]
+#[derive(PartialEq, Eq)]
 pub struct Shape {
     pub x: i16,
     pub y: i16,
@@ -12,6 +14,8 @@ pub struct Shape {
     current_matrix: u8
 }
 
+#[derive(Copy)]
+#[derive(Clone)]
 pub enum ShapeType {
     I,
     J,
@@ -22,8 +26,19 @@ pub enum ShapeType {
     Z,
 }
 
+impl ShapeType {
+    
+    pub fn random() -> ShapeType {
+        let mut rng = thread_rng();
+        let types = [ShapeType::I, ShapeType::J, ShapeType::L, 
+            ShapeType::O, ShapeType::S, ShapeType::T, ShapeType::Z];
+        *types.choose(&mut rng).expect("Could not choose a shape type")
+    }
+    
+}
+
 impl Shape {
-    pub fn create_shape(shape_type: ShapeType, x: i16, y: i16, color: Color) -> Shape {
+    pub fn new(shape_type: ShapeType, x: i16, y: i16) -> Shape {
         let matrices: [ShapeMatrix; 4] = match shape_type {
             ShapeType::I => [
                 [
@@ -207,6 +222,15 @@ impl Shape {
                     [0, 0, 0, 0],
                 ],
             ],
+        };
+        let color = match shape_type {
+            ShapeType::I => Color::Cyan,
+            ShapeType::J => Color::Blue,
+            ShapeType::L => Color::AnsiValue(208),
+            ShapeType::O => Color::Yellow,
+            ShapeType::S => Color::Green,
+            ShapeType::T => Color::Magenta,
+            ShapeType::Z => Color::Red,
         };
         Shape { matrices, x, y, color, current_matrix: 0 }
     }

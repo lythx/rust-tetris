@@ -1,12 +1,11 @@
 use std::cmp::{max, min};
-use crossterm::style::Color;
 use crate::shape::{Shape, ShapeType};
 
 const BOARD_WIDTH_IN_TILES: u16 = 10;
 const BOARD_HEIGHT_IN_TILES: u16 = 20;
 
 pub fn create_shape_and_check_collision(others: &Vec<Shape>) -> (Shape, bool) {
-    let shape = Shape::create_shape(ShapeType::L, 5, 0, Color::Red);
+    let shape = Shape::new(ShapeType::random(), BOARD_WIDTH_IN_TILES as i16 / 2, 0);
     let is_colliding = 
         check_collision_with_walls(&shape) || check_collision_with_shapes(&shape, others);
     (shape, is_colliding)   
@@ -16,6 +15,7 @@ pub fn fall_instantly(shape: &mut Shape, others: &Vec<Shape>) {
     while !check_collision_with_shapes(shape, others) && !check_collision_with_walls(shape) {
         shape.y += 1;
     }
+    shape.y -= 1;   
 }
 
 pub fn try_move_left(shape: &mut Shape, others: &Vec<Shape>) -> bool {
@@ -40,10 +40,6 @@ pub fn try_rotate(shape: &mut Shape, others: &Vec<Shape>) -> bool {
 }
 
 fn try_move(shape: &mut Shape, others: &Vec<Shape>, dx: i16, dy: i16) -> bool {
-    if shape.x + dx < 0 || shape.y + dy < 0 {
-        return false
-    }
-    
     shape.x = shape.x + dx;
     shape.y = shape.y + dy;
     if check_collision_with_shapes(shape, others) || check_collision_with_walls(shape) {
@@ -81,10 +77,6 @@ fn check_collision_with_walls(shape: &Shape) -> bool {
     }
     
     shape.x + left < 0 || shape.y + top < 0 || 
-        shape.x + right > BOARD_WIDTH_IN_TILES as i16 || 
-        shape.y + bottom > BOARD_HEIGHT_IN_TILES as i16
+        shape.x + right >= BOARD_WIDTH_IN_TILES as i16 || 
+        shape.y + bottom >= BOARD_HEIGHT_IN_TILES as i16
 }
-
- 
-
-

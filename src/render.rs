@@ -42,13 +42,13 @@ pub fn render_borders() -> Result<()> {
         MoveTo(left - 1, top - 1),
         Print("_".repeat(BOARD_WIDTH as usize + 2))
     )?;
-    for row in top..bottom + 2 {
+    for row in top..bottom {
         execute!(stdout, MoveTo(left - 1, row), Print("|"))?;
         execute!(stdout, MoveTo(right, row), Print("|"))?;
     }
     execute!(
         stdout,
-        MoveTo(left - 1, bottom + 2),
+        MoveTo(left - 1, bottom),
         Print("‾".repeat(BOARD_WIDTH as usize + 2)))?;
 
     stdout.flush()?;
