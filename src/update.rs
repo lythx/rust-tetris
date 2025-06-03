@@ -1,12 +1,16 @@
 use std::cmp::{max, min};
-use crate::LockedSquareMatrix;
+use crate::{LockedSquareMatrix, NextShapes};
 use crate::shape::{Shape, ShapeType};
 
 const BOARD_WIDTH_IN_TILES: u16 = 10;
 const BOARD_HEIGHT_IN_TILES: u16 = 20;
 
-pub fn create_shape_and_check_collision(locked_squares: &LockedSquareMatrix) -> (Shape, bool) {
-    let shape = Shape::new(ShapeType::random(), BOARD_WIDTH_IN_TILES as i16 / 2, 0);
+pub fn put_next_shape_on_board_and_check_collision
+        (next_shapes: &mut NextShapes, locked_squares: &LockedSquareMatrix) -> (Shape, bool) {
+    let shape = Shape::new(next_shapes[0].shape_type, BOARD_WIDTH_IN_TILES as i16 / 2, 0);
+    next_shapes[0] = next_shapes[1];
+    next_shapes[1] = next_shapes[2];
+    next_shapes[2] = Shape::new_random(0, 0);
     let is_colliding = 
         check_collision_with_walls(&shape) || check_collision_with_locked_squares(&shape, locked_squares);
     (shape, is_colliding)   
@@ -61,13 +65,23 @@ pub fn delete_full_rows(locked_squares: &mut LockedSquareMatrix) -> u8 {
         if full_rows.contains(&y) {
             continue;
         }
-        for x in 0..BOARD_WIDTH_IN_TILES as usize {
-            locked_squares[x][copy_to_y] = locked_squares[x][y];
-            locked_squares[x][y] = None;
+        if y != copy_to_y {
+            for x in 0..BOARD_WIDTH_IN_TILES as usize {
+                locked_squares[x][copy_to_y] = locked_squares[x][y];
+                locked_squares[x][y] = None;
+            }
         }
         copy_to_y -= 1;
     }
     full_rows.len() as u8  
+}
+
+pub fn calculate_score(current_score: u32, did_shape_fall: bool, rows_deleted: u8) -> u32 {
+    let mut result = current_score;
+    if did_shape_fall {
+        result += 25;
+    }
+    result + rows_deleted as u32 * 100
 }
 
 fn try_move(shape: &mut Shape, locked_squares: &LockedSquareMatrix, dx: i16, dy: i16) -> bool {

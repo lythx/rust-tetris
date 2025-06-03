@@ -10,12 +10,14 @@ pub struct Shape {
     pub x: i16,
     pub y: i16,
     pub color: Color,
+    pub shape_type: ShapeType,
     matrices: [ShapeMatrix; 4],
     current_matrix: u8
 }
 
+#[derive(Clone, Debug)]
 #[derive(Copy)]
-#[derive(Clone)]
+#[derive(PartialEq, Eq)]
 pub enum ShapeType {
     I,
     J,
@@ -232,7 +234,11 @@ impl Shape {
             ShapeType::T => Color::Magenta,
             ShapeType::Z => Color::Red,
         };
-        Shape { matrices, x, y, color, current_matrix: 0 }
+        Shape { matrices, x, y, color, shape_type, current_matrix: 0 }
+    }
+    
+    pub fn new_random(x: i16, y: i16) -> Shape {
+        Shape::new(ShapeType::random(), x, y)
     }
 
     pub fn rotate(&mut self, how_many_times: i8) {
